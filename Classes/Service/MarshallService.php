@@ -319,6 +319,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 		}
 		$encounteredClassesIndexedBySplHash[$hash] = $hash;
 		foreach ($objectReflection->getProperties() as $propertyReflection) {
+			unset($propertyValue);
 			$propertyName = $propertyReflection->getName();
 			$supportsDeflation = $this->assertSupportsDeflation($object, $propertyName);
 			if ($supportsDeflation === FALSE) {
@@ -337,8 +338,10 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 						$propertyValue = $object->$getter();
 					}
 				}
-				$metaConfigurationAndDeflatedValue = $this->deflatePropertyValue($propertyValue, $encounteredClassesIndexedBySplHash);
-				$marshaled[$propertyName] = $metaConfigurationAndDeflatedValue;
+				if (isset($propertyValue) === TRUE) {
+					$metaConfigurationAndDeflatedValue = $this->deflatePropertyValue($propertyValue, $encounteredClassesIndexedBySplHash);
+					$marshaled[$propertyName] = $metaConfigurationAndDeflatedValue;
+				}
 			}
 		}
 		return $marshaled;
