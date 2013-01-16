@@ -327,8 +327,16 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 			}
 			$allowsDeflation = $this->assertAllowsDeflation($object, $propertyName);
 			if ($allowsDeflation) {
-				$propertyReflection->setAccessible(TRUE);
-				$propertyValue = $propertyReflection->getValue($object);
+				if (method_exists($propertyReflection, 'setAccessible') === TRUE) {
+					$propertyReflection->setAccessible(TRUE);
+					$propertyValue = $propertyReflection->getValue($object);
+					$propertyReflection->setAccessible(FALSE);
+				} else {
+					$getter = 'get' . ucfirst($propertyName);
+					if (method_exists($object, $getter) === TRUE) {
+						$propertyValue = $object->$getter();
+					}
+				}
 				$metaConfigurationAndDeflatedValue = $this->deflatePropertyValue($propertyValue, $encounteredClassesIndexedBySplHash);
 				$marshaled[$propertyName] = $metaConfigurationAndDeflatedValue;
 			}
