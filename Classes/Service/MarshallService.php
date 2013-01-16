@@ -357,12 +357,21 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 		$objectReflection = new ReflectionObject($instance);
 		$encounteredClassesIndexedBySplHash[$hash] = $instance;
 		foreach ($metaConfigurationAndDeflatedValue['value'] as $propertyName => $propertyMetaConfigurationAndDeflatedValue) {
-			$propertyReflection = $objectReflection->getProperty($propertyName);
-			$propertyReflection->setAccessible(TRUE);
 			$propertyMetaConfigurationAndDeflatedValue = $metaConfigurationAndDeflatedValue['value'][$propertyName];
+			$propertyReflection = $objectReflection->getProperty($propertyName);
 			$inflatedValue = $this->inflatePropertyValue($propertyMetaConfigurationAndDeflatedValue, $encounteredClassesIndexedBySplHash);
-			$propertyReflection->setValue($instance, $inflatedValue);
-			$propertyReflection->setAccessible(FALSE);
+			if (method_exists($propertyReflection, 'setAccessible') === TRUE) {
+				$propertyReflection->setAccessible(TRUE);
+				$propertyReflection->setValue($instance, $inflatedValue);
+				$propertyReflection->setAccessible(FALSE);
+			} else {
+					// on PHP 5.2, there's no way to directly set the property - we'll have to use the setter method if one exists
+					// and if one does not exists, silently ignore the property. This will limit the output but prevent breakage.
+				$setter = 'set' . ucfirst($propertyName);
+				if (method_exists($instance, $setter)) {
+					$instance->$setter($inflatedValue);
+				}
+			}
 		}
 		return $instance;
 	}
