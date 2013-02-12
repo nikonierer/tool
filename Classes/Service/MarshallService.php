@@ -103,10 +103,23 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	protected $objectManager;
 
 	/**
+	 * @var Tx_Tool_Service_JsonService
+	 */
+	protected $jsonService;
+
+	/**
 	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
 	 */
 	public function injectObjectManager(Tx_Extbase_Object_ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
+	}
+
+	/**
+	 * @param Tx_Tool_Service_JsonService $jsonService
+	 * @return void
+	 */
+	public function injectJsonService(Tx_Tool_Service_JsonService $jsonService) {
+		$this->jsonService = $jsonService;
 	}
 
 	/**
@@ -122,7 +135,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 		ini_set('memory_limit', '2048M');
 		$encountered = array();
 		$marshaled = $this->deflatePropertyValue($object, $encountered);
-		$encoded = serialize($marshaled);
+		$encoded = $this->jsonService->encode($marshaled);
 		return $encoded;
 	}
 
@@ -136,18 +149,17 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 */
 	public function unmarshall($string, $allowedRootClassOrClasses = NULL) {
 		$string = trim($string);
-		$decoded = unserialize($string);
-		if (isset($decoded['class']) === FALSE) {
-			return NULL;
-		}
-		$rootClassName = $decoded['class'];
-		if (is_array($allowedRootClassOrClasses) === TRUE) {
-			$rootClassIsPermitted = in_array($rootClassName, $allowedRootClassOrClasses);
-		} else {
-			$rootClassIsPermitted = ($rootClassName === $allowedRootClassOrClasses || $allowedRootClassOrClasses === NULL);
-		}
-		if ($rootClassIsPermitted === FALSE) {
-			throw new RuntimeException('Attempt to unmarshall a disallowed root object class: "' . $rootClassName . '".', 1358284604);
+		$decoded = $this->jsonService->decode($string);
+		if (TRUE === isset($decoded['class'])) {
+			$rootClassName = $decoded['class'];
+			if (is_array($allowedRootClassOrClasses) === TRUE) {
+				$rootClassIsPermitted = in_array($rootClassName, $allowedRootClassOrClasses);
+			} else {
+				$rootClassIsPermitted = ($rootClassName === $allowedRootClassOrClasses || $allowedRootClassOrClasses === NULL);
+			}
+			if ($rootClassIsPermitted === FALSE) {
+				throw new RuntimeException('Attempt to unmarshall a disallowed root object class: "' . $rootClassName . '".', 1358284604);
+			}
 		}
 		$encounteredObjectInstancesForReuse = array();
 		$unmarshaled = $this->inflatePropertyValue($decoded, $encounteredObjectInstancesForReuse);
