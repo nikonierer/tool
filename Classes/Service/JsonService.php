@@ -101,6 +101,9 @@ class Tx_Tool_Service_JsonService implements t3lib_Singleton {
 			$decoded = json_decode($str, $options);
 		} else {
 			$decoded = json_decode($str);
+			if (TRUE === is_object($decoded) || TRUE === is_array($decoded)) {
+				$decoded = $this->recursiveObjectOrArrayToAssociativeArray($decoded);
+			}
 		}
 		return $decoded;
 	}
@@ -136,6 +139,21 @@ class Tx_Tool_Service_JsonService implements t3lib_Singleton {
 			'id' => 'id'
 		);
 		return $this->encode($data);
+	}
+
+	/**
+	 * @param mixed $objectOrArray
+	 * @return mixed
+	 */
+	protected function recursiveObjectOrArrayToAssociativeArray($objectOrArray) {
+		$array = array();
+		foreach ($objectOrArray as $key => $value) {
+			if (TRUE === is_object($value) || TRUE === is_array($value)) {
+				$value = $this->recursiveObjectOrArrayToAssociativeArray($value);
+			}
+			$array[$key] = $value;
+		}
+		return $array;
 	}
 
 }
