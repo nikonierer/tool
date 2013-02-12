@@ -60,6 +60,18 @@ class Tx_Tool_Service_JsonService implements t3lib_Singleton {
 	}
 
 	/**
+	 * Get decoding options depending on PHP version
+	 *
+	 * @return integer
+	 */
+	private function getDecodeOptions() {
+		if ($this->getPhpVersion() >= 5.3) {
+			return JSON_OBJECT_AS_ARRAY;
+		}
+		return 0;
+	}
+
+	/**
 	 * Encode to working JSON depending on PHP version
 	 *
 	 * @param mixed $source
@@ -84,7 +96,12 @@ class Tx_Tool_Service_JsonService implements t3lib_Singleton {
 	 * @api
 	 */
 	public function decode($str) {
-		$decoded = json_decode($str);
+		if ($this->getPhpVersion() >= 5.3) {
+			$options = $this->getEncodeOptions();
+			$decoded = json_decode($str, $options);
+		} else {
+			$decoded = json_decode($str);
+		}
 		return $decoded;
 	}
 
