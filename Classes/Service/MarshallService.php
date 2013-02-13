@@ -98,6 +98,15 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	);
 
 	/**
+	 * @var array
+	 */
+	protected $rewrites = array(
+		'Tx_Extbase_Persistence_LazyObjectStorage' => 'Tx_Extbase_Persistence_ObjectStorage',
+		'TYPO3\\CMS\\Extbase\\Persistence\\LazyObjectStorage' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage',
+		'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyObjectStorage' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage',
+	);
+
+	/**
 	 * @var Tx_Extbase_Object_ObjectManagerInterface
 	 */
 	protected $objectManager;
@@ -106,6 +115,11 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @var Tx_Tool_Service_JsonService
 	 */
 	protected $jsonService;
+
+	/**
+	 * @var Tx_Extbase_Reflection_Service
+	 */
+	protected $reflectionService;
 
 	/**
 	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
@@ -120,6 +134,14 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 */
 	public function injectJsonService(Tx_Tool_Service_JsonService $jsonService) {
 		$this->jsonService = $jsonService;
+	}
+
+	/**
+	 * @param Tx_Extbase_Reflection_Service $reflectionService
+	 * @return void
+	 */
+	public function injectReflectionService(Tx_Extbase_Reflection_Service $reflectionService) {
+		$this->reflectionService = $reflectionService;
 	}
 
 	/**
@@ -175,11 +197,17 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @throws RuntimeException
 	 */
 	protected function assertSupportsDeflation($instance, $propertyName) {
-		return TRUE;
+		$className = get_class($instance);
+		$gettableProperties = $this->reflectionService->getClassPropertyNames($className);
+		if (FALSE === in_array($propertyName, $gettableProperties)) {
+			return FALSE;
+		}
+		$value = Tx_Extbase_Reflection_ObjectAccess::getProperty($instance, $propertyName, TRUE);
+		return (FALSE === $value instanceof Closure);
 	}
 
 	/**
-	 * May $propertyName on $instance be deflated according to doc comment tags and instance type (Closures not permitted)?
+	 * May $propertyName on $instance be deflated according to doc comment tags?
 	 *
 	 * @param object $instance Instance of an object, DomainObject included
 	 * @param string $propertyName String name of property on DomainObject instance which is up for assertion
@@ -187,6 +215,9 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @throws RuntimeException
 	 */
 	protected function assertAllowsDeflation($instance, $propertyName) {
+		if (self::TYPE_CLOSURE === gettype($instance)) {
+			return FALSE;
+		}
 		return TRUE;
 	}
 
@@ -199,7 +230,9 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @return boolean
 	 */
 	protected function assertAllowsInflation($className, $propertyName, $propertyType) {
-		return TRUE;
+		$className = get_class($instance);
+		$type = $this->assertTargetInstanceClassName($className, $propertyName);
+		return ($type === $propertyType || FALSE !== strpos($type, $propertyType));
 	}
 
 	/**
@@ -211,6 +244,10 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @return boolean
 	 */
 	protected function assertSupportsInflation($className, $propertyName, $propertyType) {
+		$tags = $this->reflectionService->getPropertyTagsValues($className, $propertyName);
+		if (TRUE === isset($tags['dontmarshall'])) {
+			return FALSE;
+		}
 		return TRUE;
 	}
 
@@ -222,7 +259,19 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @return string|NULL
 	 */
 	protected function assertTargetInstanceClassName($instanceOrClassName, $propertyName) {
-		return NULL;
+		$className = (TRUE === is_object($instanceOrClassName) ? get_class($instanceOrClassName) : $instanceOrClassName);
+		$tags = $this->reflectionService->getPropertyTagsValues($className, $propertyName);
+		$type = $this->reflectionService->getPropertyTagValues($className, $propertyName, 'var');
+		$bracketPosition = strpos($type, '<');
+		if (FALSE !== $bracetPosition) {
+			$type = substr($type, $bracketPosition + 1);
+			$type = substr($type, 0, -1);
+		}
+		$squareBracketPosition = strpos($type, '[');
+		if (FALSE !== $squareBracketPosition) {
+			$type = substr($type, 0, $squareBracketPosition);
+		}
+		return (class_exists($type) ? $type : NULL);
 	}
 
 	/**
@@ -304,11 +353,15 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	/**
 	 * Inflates a deflated "meta-information-plus-deflated-value" array up to a DateTime instance.
 	 *
-	 * @param array $metaConfigurationAndDeflatedValue The deflated configuration and value
+	 * @param mixed $metaConfigurationAndDeflatedValueOrTimestamp The deflated configuration and value or a plain UNIX timestamp
 	 * @return DateTime
 	 */
-	protected function inflateDateTime(array $metaConfigurationAndDeflatedValue) {
-		$timestamp = $metaConfigurationAndDeflatedValue['value'];
+	protected function inflateDateTime($metaConfigurationAndDeflatedValueOrTimestamp) {
+		if (FALSE === is_array($metaConfigurationAndDeflatedValueOrTimestamp)) {
+			$timestamp = $metaConfigurationAndDeflatedValueOrTimestamp;
+		} else {
+			$timestamp = $metaConfigurationAndDeflatedValueOrTimestamp['value'];
+		}
 		$dateTime = DateTime::createFromFormat('U', $timestamp);
 		return $dateTime;
 	}
@@ -326,7 +379,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 		$objectReflection = new ReflectionObject($object);
 		$marshaled = array();
 		$hash = spl_object_hash($object);
-		if (isset($encounteredClassesIndexedBySplHash[$hash]) === TRUE) {
+		if (TRUE === isset($encounteredClassesIndexedBySplHash[$hash])) {
 			return $hash;
 		}
 		$encounteredClassesIndexedBySplHash[$hash] = $hash;
@@ -334,26 +387,27 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 			unset($propertyValue);
 			$propertyName = $propertyReflection->getName();
 			$supportsDeflation = $this->assertSupportsDeflation($object, $propertyName);
-			if ($supportsDeflation === FALSE) {
-				throw new RuntimeException('Attempt to marshal an unsupported type (property "' .
-					$propertyName . '" on class "' . $className . '")', 1358282768);
+			if (FALSE === $supportsDeflation) {
+				continue;
 			}
 			$allowsDeflation = $this->assertAllowsDeflation($object, $propertyName);
-			if ($allowsDeflation) {
-				if (method_exists($propertyReflection, 'setAccessible') === TRUE) {
-					$propertyReflection->setAccessible(TRUE);
-					$propertyValue = $propertyReflection->getValue($object);
-					$propertyReflection->setAccessible(FALSE);
-				} else {
-					$getter = 'get' . ucfirst($propertyName);
-					if (method_exists($object, $getter) === TRUE) {
-						$propertyValue = $object->$getter();
-					}
+			if (FALSE === $allowsDeflation) {
+				throw new RuntimeException('Attempt to marshal a prohibited type (property "' .
+					$propertyName . '" on class "' . $className . '")', 1358282768);
+			}
+			if (method_exists($propertyReflection, 'setAccessible') === TRUE) {
+				$propertyReflection->setAccessible(TRUE);
+				$propertyValue = $propertyReflection->getValue($object);
+				$propertyReflection->setAccessible(FALSE);
+			} else {
+				$getter = 'get' . ucfirst($propertyName);
+				if (method_exists($object, $getter) === TRUE) {
+					$propertyValue = $object->$getter();
 				}
-				if (isset($propertyValue) === TRUE) {
-					$metaConfigurationAndDeflatedValue = $this->deflatePropertyValue($propertyValue, $encounteredClassesIndexedBySplHash);
-					$marshaled[$propertyName] = $metaConfigurationAndDeflatedValue;
-				}
+			}
+			if (isset($propertyValue) === TRUE) {
+				$metaConfigurationAndDeflatedValue = $this->deflatePropertyValue($propertyValue, $encounteredClassesIndexedBySplHash);
+				$marshaled[$propertyName] = $metaConfigurationAndDeflatedValue;
 			}
 		}
 		return $marshaled;
@@ -375,6 +429,9 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 			return NULL;
 		}
 		$className = $metaConfigurationAndDeflatedValue['class'];
+		if (TRUE === isset($this->rewrites[$className])) {
+			$className = $this->rewrites[$className];
+		}
 		$hash = $metaConfigurationAndDeflatedValue['hash'];
 		$instance = $this->objectManager->create($className);
 		$objectReflection = new ReflectionObject($instance);
@@ -421,6 +478,9 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 */
 	protected function inflateArrayObject(array $metaConfigurationAndDeflatedValue, array &$encounteredClassesIndexedBySplHash) {
 		$className = $metaConfigurationAndDeflatedValue['class'];
+		if (TRUE === isset($this->rewrites[$className])) {
+			$className = $this->rewrites[$className];
+		}
 		if (is_string($metaConfigurationAndDeflatedValue['value']) === TRUE) {
 			$possibleHash = $metaConfigurationAndDeflatedValue['value'];
 			if (isset($encounteredClassesIndexedBySplHash[$possibleHash]) === TRUE) {
