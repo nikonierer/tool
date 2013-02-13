@@ -36,10 +36,26 @@
 class Tx_Tool_Utility_VersionUtility {
 
 	/**
+	 * @var array
+	 */
+	static $version = NULL;
+
+	/**
+	 * @return array
+	 */
+	public static function getVersionAsArray() {
+		if (TRUE === is_array(self::$version)) {
+			return self::$version;
+		}
+		self::$version = explode('.', TYPO3_verion);
+		return self::$version;
+	}
+
+	/**
 	 * @return boolean
 	 */
 	public static function assertCoreVersionIsBelowSixPointZero() {
-		$version = explode('.', TYPO3_version);
+		$version = self::getVersionAsArray();
 		return ($version[0] < 6);
 	}
 
@@ -47,8 +63,13 @@ class Tx_Tool_Utility_VersionUtility {
 	 * @return boolean
 	 */
 	public static function assertCoreVersionIsAtLeastSixPointZero() {
-		$version = explode('.', TYPO3_version);
+		$version = self::getVersionAsArray();
 		return ($version[0] >= 6);
+	}
+
+	public static function assertCoreVersionIsFourPointFive() {
+		$version = self::getVersionAsArray();
+		return ($version[0] == 4 && $version[1] == 5);
 	}
 
 }
