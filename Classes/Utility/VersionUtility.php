@@ -67,6 +67,9 @@ class Tx_Tool_Utility_VersionUtility {
 		return ($version[0] >= 6);
 	}
 
+	/**
+	 * @return boolean
+	 */
 	public static function assertCoreVersionIsFourPointFive() {
 		$version = self::getVersionAsArray();
 		return ($version[0] == 4 && $version[1] == 5);
