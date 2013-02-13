@@ -1,18 +1,17 @@
 <?php
 $classPath = t3lib_extMgm::extPath('tool', 'Classes/');
-$prefixA = 'tx_tool_';
-$prefixB = 'Tx_Tool_';
+$prefix = 'tx_tool_';
 return array(
-	$prefixA . 'resource_fileresource'					=> $prefixB . 'Resource_FileResource',
-	$prefixA . 'resource_fileresourceobjectstorage'		=> $prefixB . 'Resource_FileResourceObjectStorage',
-	$prefixA . 'service_authservice'					=> $prefixB . 'Service_AuthService',
-	$prefixA . 'service_cloneservice'					=> $prefixB . 'Service_CloneService',
-	$prefixA . 'service_fileservice'					=> $prefixB . 'Service_DomainService',
-	$prefixA . 'service_jsonservice'					=> $prefixB . 'Service_JsonService',
-	$prefixA . 'service_marshallservice'				=> $prefixB . 'Service_MarshallService',
-	$prefixA . 'service_recursionservice'				=> $prefixB . 'Service_RecursionService',
-	$prefixA . 'service_userservice'					=> $prefixB . 'Service_UserService',
-	$prefixA . 'utility_arrayutility'					=> $prefixB . 'Utility_ArrayUtility',
-	$prefixA . 'utility_pathutility'					=> $prefixB . 'Utility_PathUtility',
-	$prefixA . 'utility_versionutility'					=> $prefixB . 'Utility_VersionUtility',
+	$prefix . 'resource_fileresource'					=> $classPath . 'Resource/FileResource.php',
+	$prefix . 'resource_fileresourceobjectstorage'		=> $classPath . 'Resource/FileResourceObjectStorage.php',
+	$prefix . 'service_authservice'						=> $classPath . 'Service/AuthService.php',
+	$prefix . 'service_cloneservice'					=> $classPath . 'Service/CloneService.php',
+	$prefix . 'service_fileservice'						=> $classPath . 'Service/DomainService.php',
+	$prefix . 'service_jsonservice'						=> $classPath . 'Service/JsonService.php',
+	$prefix . 'service_marshallservice'					=> $classPath . 'Service/MarshallService.php',
+	$prefix . 'service_recursionservice'				=> $classPath . 'Service/RecursionService.php',
+	$prefix . 'service_userservice'						=> $classPath . 'Service/UserService.php',
+	$prefix . 'utility_arrayutility'					=> $classPath . 'Utility/ArrayUtility.php',
+	$prefix . 'utility_pathutility'						=> $classPath . 'Utility/PathUtility.php',
+	$prefix . 'utility_versionutility'					=> $classPath . 'Utility/VersionUtility.php',
 );
