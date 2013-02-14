@@ -191,7 +191,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	/**
 	 * Does $propertyName on $instance contain a data type which supports deflation?
 	 *
-	 * @param object Instance of an object, DomainObject included
+	 * @param object $instance of an object, DomainObject included
 	 * @param string $propertyName String name of property on DomainObject instance which is up for assertion
 	 * @return boolean
 	 * @throws RuntimeException
@@ -230,7 +230,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @return boolean
 	 */
 	protected function assertAllowsInflation($className, $propertyName, $propertyType) {
-		$className = get_class($instance);
+		$className = get_class($className);
 		$type = $this->assertTargetInstanceClassName($className, $propertyName);
 		return ($type === $propertyType || FALSE !== strpos($type, $propertyType));
 	}
@@ -263,7 +263,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 		$tags = $this->reflectionService->getPropertyTagsValues($className, $propertyName);
 		$type = $this->reflectionService->getPropertyTagValues($className, $propertyName, 'var');
 		$bracketPosition = strpos($type, '<');
-		if (FALSE !== $bracetPosition) {
+		if (FALSE !== $bracketPosition) {
 			$type = substr($type, $bracketPosition + 1);
 			$type = substr($type, 0, -1);
 		}
