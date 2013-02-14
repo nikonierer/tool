@@ -117,6 +117,7 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	 *
 	 * @param Tx_Extbase_DomainObject_DomainObjectInterface $domainObject
 	 * @param string $propertyName Index name of the files in $_FILES
+	 * @param string $objectType
 	 * @return Tx_Tool_Resource_FileResourceObjectStorage
 	 * @api
 	 */
@@ -192,7 +193,7 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	 *
 	 * @param mixed $sourceFile FileObjectStorage, File Resource or string filename
 	 * @param string $destinationFilename Destination filename or path
-	 * @throws Tx_Extbase_Exception
+	 * @throws Exception
 	 * @return mixed
 	 * @api
 	 */
@@ -252,10 +253,11 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	}
 
 	/**
-	 * @param string $sourceFilename
+	 * @param string $sourceFileName
 	 * @param string $targetDir
 	 * @param string $filename The target filename to be written
 	 * @param integer $chunk If doing chunked read/write uses append mode if $chunk > 0
+	 * @throws Exception
 	 * @return array
 	 */
 	public function getFileCopyPointers($sourceFileName, $targetDir, $filename, $chunk = 0) {
