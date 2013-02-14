@@ -47,7 +47,7 @@ class Tx_Tool_Utility_VersionUtility {
 		if (TRUE === is_array(self::$version)) {
 			return self::$version;
 		}
-		self::$version = explode('.', TYPO3_verion);
+		self::$version = explode('.', TYPO3_version);
 		return self::$version;
 	}
 
