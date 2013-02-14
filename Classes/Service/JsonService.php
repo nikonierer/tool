@@ -97,7 +97,7 @@ class Tx_Tool_Service_JsonService implements t3lib_Singleton {
 	 */
 	public function decode($str) {
 		if ($this->getPhpVersion() >= 5.3) {
-			$options = $this->getEncodeOptions();
+			$options = $this->getDecodeOptions();
 			$decoded = json_decode($str, $options);
 		} else {
 			$decoded = json_decode($str);
