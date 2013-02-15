@@ -202,7 +202,13 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 		if (FALSE === in_array($propertyName, $gettableProperties)) {
 			return FALSE;
 		}
-		$value = Tx_Extbase_Reflection_ObjectAccess::getProperty($instance, $propertyName, TRUE);
+		try {
+			$value = Tx_Extbase_Reflection_ObjectAccess::getProperty($instance, $propertyName, TRUE);
+		} catch (Exception $error) {
+			t3lib_div::sysLog('MarshallService encountered an error while attempting to retrieve the value of ' .
+				$className . '::$' . $propertyName, 'site - assuming safe deflation is possible', t3lib_div::SYSLOG_SEVERITY_NOTICE);
+			return TRUE;
+		}
 		return (FALSE === $value instanceof Closure);
 	}
 
