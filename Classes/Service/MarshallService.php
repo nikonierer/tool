@@ -230,7 +230,6 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @return boolean
 	 */
 	protected function assertAllowsInflation($className, $propertyName, $propertyType) {
-		$className = get_class($instance);
 		$type = $this->assertTargetInstanceClassName($className, $propertyName);
 		return ($type === $propertyType || FALSE !== strpos($type, $propertyType));
 	}
@@ -260,10 +259,9 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 */
 	protected function assertTargetInstanceClassName($instanceOrClassName, $propertyName) {
 		$className = (TRUE === is_object($instanceOrClassName) ? get_class($instanceOrClassName) : $instanceOrClassName);
-		$tags = $this->reflectionService->getPropertyTagsValues($className, $propertyName);
 		$type = $this->reflectionService->getPropertyTagValues($className, $propertyName, 'var');
 		$bracketPosition = strpos($type, '<');
-		if (FALSE !== $bracetPosition) {
+		if (FALSE !== $bracketPosition) {
 			$type = substr($type, $bracketPosition + 1);
 			$type = substr($type, 0, -1);
 		}
