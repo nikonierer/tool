@@ -172,6 +172,10 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	public function unmarshall($string, $allowedRootClassOrClasses = NULL) {
 		$string = trim($string);
 		$decoded = $this->jsonService->decode($string);
+		if (NULL === $decoded) {
+			throw new Exception('Unable to unmarshall a marshaled object; the decoded result was NULL. ' .
+				'Marshaled object data: ' . var_export($string, TRUE), 1361052486);
+		}
 		if (TRUE === isset($decoded['class'])) {
 			$rootClassName = $decoded['class'];
 			if (is_array($allowedRootClassOrClasses) === TRUE) {
