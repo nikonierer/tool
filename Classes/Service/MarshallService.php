@@ -186,6 +186,8 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 			if ($rootClassIsPermitted === FALSE) {
 				throw new RuntimeException('Attempt to unmarshall a disallowed root object class: "' . $rootClassName . '".', 1358284604);
 			}
+		} elseif (TRUE === is_null($decoded)) {
+			throw new RuntimeException('Unable to unmarshall input, return value was NULL. Input was: ' . $string, 1360854250);
 		}
 		$encounteredObjectInstancesForReuse = array();
 		$unmarshaled = $this->inflatePropertyValue($decoded, $encounteredObjectInstancesForReuse);
