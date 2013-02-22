@@ -197,7 +197,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	/**
 	 * Does $propertyName on $instance contain a data type which supports deflation?
 	 *
-	 * @param object Instance of an object, DomainObject included
+	 * @param object $instance Instance of an object, DomainObject included
 	 * @param string $propertyName String name of property on DomainObject instance which is up for assertion
 	 * @return boolean
 	 * @throws RuntimeException
