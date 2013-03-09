@@ -55,7 +55,7 @@ class Tx_Tool_Service_CloneService implements t3lib_Singleton {
 
 	/**
 	 * Inject a RecursionService instance
-	 * @param Tx_Tool_Service_RecursionService $handler
+	 * @param Tx_Tool_Service_RecursionService $recursionService
 	 */
 	public function injectRecursionService(Tx_Tool_Service_RecursionService $recursionService) {
 		$this->recursionService = $recursionService;
