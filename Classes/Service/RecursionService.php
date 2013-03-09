@@ -177,6 +177,7 @@ class Tx_Tool_Service_RecursionService implements t3lib_Singleton {
 	 * Check the current recursion level and encounter status. Call in each iteration of your function
 	 * @param string $exitMsg
 	 * @return boolean
+	 * @throws Exception
 	 * @api
 	 */
 	public function check($exitMsg='<no message>') {
