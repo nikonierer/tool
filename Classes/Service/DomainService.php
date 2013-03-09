@@ -66,7 +66,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 
 	/**
 	 * Inject a RecursionService instance
-	 * @param Tx_Tool_Service_RecursionService $handler
+	 * @param Tx_Tool_Service_RecursionService $recursionService
 	 */
 	public function injectRecursionService(Tx_Tool_Service_RecursionService $recursionService) {
 		$this->recursionService = $recursionService;
@@ -108,7 +108,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 	 *
 	 * @param mixed $object The object or classname containing properties
 	 * @param string $annotation The name of the annotation to search for, for example 'ExtJS' for annotation @ExtJS (case sensitive)
-	 * @param string $value The value to search for among annotation values. Defaults to TRUE which means the annotation must simply be present
+	 * @param string|boolean $value The value to search for among annotation values. Defaults to TRUE which means the annotation must simply be present
 	 * @param boolean $addUid If TRUE, the field "uid" will be force-added to the output regardless of annotation
 	 * @return array
 	 * @api
@@ -290,7 +290,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 	 * @param mixed $className The name of the class containing the property. Can be an object instance
 	 * @param string $propertyName The name of the property on className to check
 	 * @param string $annotation The annotation which must be present
-	 * @param string $value The value which annotation must contain - default is TRUE meaning annotation must simply be present
+	 * @param string|boolean $value The value which annotation must contain - default is TRUE meaning annotation must simply be present
 	 * @return boolean
 	 * @api
 	 */
@@ -398,7 +398,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 	 *
 	 * @param mixed $object The object or classname to read
 	 * @param string $annotation The annotation on which to base output
-	 * @param string $value The value to search for; multiple values may be used in the annotation; $value must be present among them. If TRUE, all properties which have the annotation are returned
+	 * @param string|boolean $value The value to search for; multiple values may be used in the annotation; $value must be present among them. If TRUE, all properties which have the annotation are returned
 	 * @param boolean $addUid If TRUE, the UID of the DomainObject will be force-added to the output regardless of annotation
 	 * @return array
 	 * @api
@@ -454,6 +454,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 	 *
 	 * @param mixed $object
 	 * @param string $propertyName
+	 * @return array
 	 * @api
 	 */
 	public function getAnnotationsByProperty($object, $propertyName) {
