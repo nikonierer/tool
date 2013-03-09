@@ -97,6 +97,8 @@ class Tx_Tool_Service_AuthService implements t3lib_Singleton {
 	/**
 	 * Returns TRUE only if a backend user is currently logged in. If used,
 	 * argument specifies that the logged in user must be that specific user
+	 * 
+	 * @param int $backendUser
 	 * @return boolean
 	 * @api
 	 */
