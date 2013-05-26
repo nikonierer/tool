@@ -1,9 +1,9 @@
-TYPO3 extension Tool: Services and Utilities for Extbase extensions
-===================================================================
+Services and Utilities for Extbase extensions
+=============================================
 
-## What is it?
+> A collection of Services (for injection) and Utilities (for static calling) for Extbase extensions.
 
-A collection of Services (for injection) and Utilities (for static calling) for Extbase extensions.
+[![Build Status](https://travis-ci.org/FluidTYPO3/tool.png?branch=master)](https://travis-ci.org/FluidTYPO3/tool)
 
 ## What does it do?
 
