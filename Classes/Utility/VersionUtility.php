@@ -38,7 +38,7 @@ class Tx_Tool_Utility_VersionUtility {
 	/**
 	 * @var array
 	 */
-	static $version = NULL;
+	static private $version = NULL;
 
 	/**
 	 * @return array

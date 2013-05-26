@@ -572,11 +572,10 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 			}
 			return $folders;
 		}
-		global $TCA;
 		$tableName = $this->getDatabaseTable($object);
 		t3lib_div::loadTCA($tableName);
 		$underscoredPropertyName = $this->convertCamelCaseToLowerCaseUnderscored($propertyName);
-		$uploadFolder = $TCA[$tableName]['columns'][$underscoredPropertyName]['config']['uploadfolder'];
+		$uploadFolder = $GLOBALS['TCA'][$tableName]['columns'][$underscoredPropertyName]['config']['uploadfolder'];
 		return $uploadFolder;
 	}
 

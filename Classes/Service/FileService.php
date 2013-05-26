@@ -257,11 +257,12 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	 * @param string $targetDir
 	 * @param string $filename The target filename to be written
 	 * @param integer $chunk If doing chunked read/write uses append mode if $chunk > 0
+	 * @throws Exception
 	 * @return array
 	 */
 	public function getFileCopyPointers($sourceFileName, $targetDir, $filename, $chunk = 0) {
-		$in = fopen($sourceFileName, "rb");
-		$out = fopen($targetDir . '/' . $filename, $chunk == 0 ? "wb" : "ab");
+		$in = fopen($sourceFileName, 'rb');
+		$out = fopen($targetDir . '/' . $filename, $chunk == 0 ? 'wb' : 'ab');
 		if ($out === FALSE) {
 			throw new Exception('Failed to open output stream', 102);
 		} elseif ($in === FALSE) {
