@@ -142,7 +142,7 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 		for ($i = 0; $i < $numFiles; $i++) {
 			$filename = Tx_Extbase_Reflection_ObjectAccess::getProperty($_FILES[$namespace]['tmp_name'], $propertyName . '.' . $i);
 			$targetFilename = Tx_Extbase_Reflection_ObjectAccess::getProperty($_FILES[$namespace]['name'], $propertyName . '.' . $i);
-			if($targetFilename && $targetFilename != '') {
+			if ($targetFilename && $targetFilename != '') {
 				if (is_file($filename)) {
 					$object = $this->objectManager->get($objectType, $filename);
 					$object->setTargetFilename($targetFilename);
