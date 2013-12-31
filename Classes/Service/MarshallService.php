@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2013 Claus Due <claus@wildside.dk>, Wildside A/S
+ *  (c) 2014 Claus Due <claus@namelesscoder.net>
  *
  *  All rights reserved
  *
@@ -76,7 +76,7 @@
  * based manual inflation due to the use of meta-nesting of objects)
  * etc. and can be compressed using any compression routine.
  *
- * @author Claus Due, Wildside A/S
+ * @author Claus Due
  * @package Tool
  * @subpackage Service
  */

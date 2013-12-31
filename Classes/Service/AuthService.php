@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Claus Due <claus@wildside.dk>, Wildside A/S
+ *  (c) 2011 Claus Due <claus@namelesscoder.net>
  *
  *  All rights reserved
  *
@@ -29,7 +29,7 @@
  * Responds with either TRUE or FALSE depending on various authentication checks
  * such as group membership, logged in BE/FE user etc.
  *
- * @author Claus Due, Wildside A/S
+ * @author Claus Due
  * @package Tool
  * @subpackage Service
  */

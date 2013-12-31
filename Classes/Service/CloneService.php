@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Claus Due <claus@wildside.dk>, Wildside A/S
+ *  (c) 2014 Claus Due <claus@namelesscoder.net>
  *
  *  All rights reserved
  *
@@ -29,7 +29,7 @@
  * fresh DomainObject with either copies of or references to the original
  * related values.
  *
- * @author Claus Due, Wildside A/S
+ * @author Claus Due
  * @package Tool
  * @subpackage Service
  */

@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Claus Due <claus@wildside.dk>, Wildside A/S
+ *  (c) 2014 Claus Due <claus@namelesscoder.net>
  *
  *  All rights reserved
  *
@@ -29,7 +29,7 @@
  * Tx_Tool_Resource_FileResource and others. Supports "serialization" to a TYPO3-compatible
  * CSV format based on $basePath for true BE support.
  *
- * @author Claus Due, Wildside A/S
+ * @author Claus Due
  * @package Tool
  * @subpackage Resource
  */
