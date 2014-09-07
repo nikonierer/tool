@@ -5,14 +5,6 @@ Services and Utilities for Extbase extensions
 
 [![Build Status](https://travis-ci.org/FluidTYPO3/tool.png?branch=master)](https://travis-ci.org/FluidTYPO3/tool)
 
-## Code Quality
-
-![Abstraction Instability Chart](Documentation/ComplexityChart.png)
-![Inheritance and dependency risk](Documentation/PyramidChart.png)
-
-_Understanding the [Abstraction Instability Chart](http://pdepend.org/documentation/handbook/reports/abstraction-instability-chart.html)
-and [Pyramid Chart](http://pdepend.org/documentation/handbook/reports/overview-pyramid.html)._
-
 ## What does it do?
 
 Provides class files. Sweet and simple.
