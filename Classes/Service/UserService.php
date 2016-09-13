@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Service;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -29,21 +32,21 @@
  * Gets Frontend or Backend users currently logged in. Uses FrontendUserRepository
  * for fetching Frontend Users.
  *
- * @author Claus Due
  * @package Tool
  * @subpackage Service
  */
-class Tx_Tool_Service_UserService implements t3lib_Singleton {
+class UserService implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
-	 * @var Tx_Extbase_Domain_Repository_FrontendUserRepository
+	 * @var \TYPO3\CMS\Extbase\Domain\Repository\FrontendUserRepository
+     * @inject
 	 */
 	protected $frontendUserRepository;
 
 	/**
-	 * @param Tx_Extbase_Domain_Repository_FrontendUserRepository $frontendUserRepository
+	 * @param \TYPO3\CMS\Extbase\Domain\Repository\FrontendUserRepository $frontendUserRepository
 	 */
-	public function injectFrontendUserRepository(Tx_Extbase_Domain_Repository_FrontendUserRepository $frontendUserRepository) {
+	public function injectFrontendUserRepository(\TYPO3\CMS\Extbase\Domain\Repository\FrontendUserRepository $frontendUserRepository) {
 		$this->frontendUserRepository = $frontendUserRepository;
 		$query = $this->frontendUserRepository->createQuery();
 		$querySettings = $query->getQuerySettings();
@@ -55,11 +58,14 @@ class Tx_Tool_Service_UserService implements t3lib_Singleton {
 	/**
 	 * Gets the currently logged in Frontend User
 	 *
-	 * @return Tx_Extbase_Domain_Model_FrontendUser
+	 * @return \TYPO3\CMS\Extbase\Domain\Model\FrontendUser
 	 * @api
 	 */
 	public function getCurrentFrontendUser() {
-		return $this->frontendUserRepository->findByUid($GLOBALS['TSFE']->fe_user->user['uid']);
+	    /** @var \TYPO3\CMS\Extbase\Domain\Model\FrontendUser $user */
+	    $user = $this->frontendUserRepository->findByUid((int)$GLOBALS['TSFE']->fe_user->user['uid']);
+
+		return $user;
 	}
 
 	/**

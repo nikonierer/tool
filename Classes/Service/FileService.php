@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Service;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -30,35 +33,22 @@
  * critical, which means that failure results in an Exception. Use try/catch to
  * detect the particular type of error if you want to report it as a FlashMessage.
  *
- * @author Claus Due
  * @package Tool
  * @subpackage Service
  */
-class Tx_Tool_Service_FileService implements t3lib_Singleton {
+class FileService implements \TYPO3\CMS\Core\SingletonInterface  {
 
 	/**
-	 * @var Tx_Extbase_Object_ObjectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
+     * @inject
 	 */
 	protected $objectManager;
 
 	/**
-	 * @var Tx_Tool_Service_DomainService
+	 * @var DomainService
+     * @inject
 	 */
 	protected $domainService;
-
-	/**
-	 * @param Tx_Extbase_Object_ObjectManager $objectManager
-	 */
-	public function injectObjectManager(Tx_Extbase_Object_ObjectManager $objectManager) {
-		$this->objectManager = $objectManager;
-	}
-
-	/**
-	 * @param Tx_Tool_Service_DomainService $domainService
-	 */
-	public function injectInfoService(Tx_Tool_Service_DomainService $domainService) {
-		$this->domainService = $domainService;
-	}
 
 	/**
 	 * Automatically upload files for $domainObject based on $propertyName. Uses
@@ -71,14 +61,14 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	 *
 	 * See documentation for further instructions on integrating files.
 	 *
-	 * @param Tx_Extbase_DomainObject_DomainObjectInterface $domainObject
+	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $domainObject
 	 * @param string $propertyName
 	 * @param string $basePath
-	 * @throws Exception
+	 * @throws \Exception
 	 * @return boolean
 	 * @api
 	 */
-	public function autoUpload(Tx_Extbase_DomainObject_DomainObjectInterface &$domainObject, $propertyName = NULL, $basePath = NULL) {
+	public function autoUpload(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface &$domainObject, $propertyName = NULL, $basePath = NULL) {
 		if ($propertyName === NULL) {
 			$propertyNames = $this->domainService->getPropertiesByAnnotation($domainObject, 'file', TRUE, FALSE);
 			foreach ($propertyNames as $propertyName) {
@@ -94,11 +84,11 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 
 		$objectType = array_pop($this->domainService->getAnnotationValuesByProperty($domainObject, $propertyName, 'file'));
 		if (!$objectType) {
-			$objectType = 'Tx_Tool_Resource_FileResource';
+			$objectType = \Greenfieldr\Tool\Resource\FileResource::class;
 		}
 		$fileObjectStorage = $this->getUploadedFiles($domainObject, $propertyName, $objectType);
 
-		foreach ($fileObjectStorage as $fileObject) {
+        foreach ($fileObjectStorage as $fileObject) {
 			$source = $fileObject->getAbsolutePath();
 			$destination = $uploadFolder . '/' . $fileObject->getTargetFilename();
 			$newFilename = $this->move($source, $destination);
@@ -115,24 +105,24 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	/**
 	 * Gets files uploaded through field name $name
 	 *
-	 * @param Tx_Extbase_DomainObject_DomainObjectInterface $domainObject
+	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $domainObject
 	 * @param string $propertyName Index name of the files in $_FILES
 	 * @param string $objectType Optional class name to use for uploaded file resources
-	 * @return Tx_Tool_Resource_FileResourceObjectStorage
+	 * @return \Greenfieldr\Tool\Resource\FileResourceObjectStorage
 	 * @api
 	 */
-	public function getUploadedFiles(Tx_Extbase_DomainObject_DomainObjectInterface &$domainObject, $propertyName, $objectType = NULL) {
+	public function getUploadedFiles(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface &$domainObject, $propertyName, $objectType = NULL) {
 		if ($objectType === NULL) {
 			$objectType = 'Tx_Tool_Resource_FileResource';
 		}
 		$namespace = $this->domainService->getPluginNamespace($domainObject);
-		$fileObjectStorage = $this->objectManager->create('Tx_Tool_Resource_FileResourceObjectStorage');
-		$postFiles = Tx_Extbase_Reflection_ObjectAccess::getProperty($_FILES[$namespace]['tmp_name'], $propertyName);
+		$fileObjectStorage = $this->objectManager->get(\Greenfieldr\Tool\Resource\FileResourceObjectStorage::class);
+		$postFiles = \TYPO3\CMS\Extbase\Reflection\ObjectAccess::getProperty($_FILES[$namespace]['tmp_name'], $propertyName);
 		if (is_array($postFiles) === FALSE) {
 			$filename = $postFiles;
-			$targetFilename = Tx_Extbase_Reflection_ObjectAccess::getProperty($_FILES[$namespace]['name'], $propertyName);
+			$targetFilename = \TYPO3\CMS\Extbase\Reflection\ObjectAccess::getProperty($_FILES[$namespace]['name'], $propertyName);
 			if ($targetFilename && $targetFilename != '') {
-				$object = $this->objectManager->create($objectType, $filename);
+				$object = $this->objectManager->get($objectType, $filename);
 				$object->setTargetFilename($targetFilename);
 				$fileObjectStorage->attach($object);
 				return $fileObjectStorage;
@@ -140,8 +130,8 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 		}
 		$numFiles = count($postFiles);
 		for ($i = 0; $i < $numFiles; $i++) {
-			$filename = Tx_Extbase_Reflection_ObjectAccess::getProperty($_FILES[$namespace]['tmp_name'], $propertyName . '.' . $i);
-			$targetFilename = Tx_Extbase_Reflection_ObjectAccess::getProperty($_FILES[$namespace]['name'], $propertyName . '.' . $i);
+			$filename = \TYPO3\CMS\Extbase\Reflection\ObjectAccess::getProperty($_FILES[$namespace]['tmp_name'], $propertyName . '.' . $i);
+			$targetFilename = \TYPO3\CMS\Extbase\Reflection\ObjectAccess::getProperty($_FILES[$namespace]['name'], $propertyName . '.' . $i);
 			if ($targetFilename && $targetFilename != '') {
 				if (is_file($filename)) {
 					$object = $this->objectManager->get($objectType, $filename);
@@ -161,7 +151,7 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	 * the resulting path-stripped destination filename as string
 	 * @param string $uploadedFilename
 	 * @param string $destinationPath
-	 * @throws Exception
+	 * @throws \Exception
 	 * @return string
 	 * @api
 	 */
@@ -174,7 +164,7 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	 *
 	 * @param mixed $sourceFilename FileObjectStorage, File Resource or string filename
 	 * @param string $destinationFilename Destination filename or path
-	 * @throws Exception
+	 * @throws \Exception
 	 * @return boolean
 	 * @api
 	 */
@@ -184,7 +174,7 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 			$this->unlink($sourceFilename);
 			return $newFilename;
 		} else {
-			throw new Exception('Could not move file ' . $sourceFilename . ' to ' . $destinationFilename, 1311895077);
+			throw new \Exception('Could not move file ' . $sourceFilename . ' to ' . $destinationFilename, 1311895077);
 		}
 	}
 
@@ -193,17 +183,19 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	 *
 	 * @param mixed $sourceFile FileObjectStorage, File Resource or string filename
 	 * @param string $destinationFilename Destination filename or path
-	 * @throws Exception
+	 * @throws \Exception
 	 * @return mixed
 	 * @api
 	 */
 	public function copy($sourceFile, $destinationFilename) {
 		$pathinfo = pathinfo($destinationFilename);
-		if ($sourceFile instanceof Tx_Tool_Resource_FileResourceObjectStorage) {
+        $sourceFilename = null;
+
+        if ($sourceFile instanceof \Greenfieldr\Tool\Resource\FileResourceObjectStorage) {
 			foreach ($sourceFile as $childFile) {
 				$this->copy($childFile, $pathinfo['dirname']);
 			}
-		} elseif ($sourceFile instanceof Tx_Tool_Resource_FileResource) {
+		} elseif ($sourceFile instanceof \Greenfieldr\Tool\Resource\FileResource) {
 			$sourceFilename = $sourceFile->getAbsolutePath();
 		} else {
 			$sourceFilename = $sourceFile;
@@ -218,7 +210,7 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 		$targetFile = $newFilename;
 		$copied = copy($sourceFilename, $targetFile);
 		if ($copied === FALSE) {
-			throw new Exception('Could not copy file ' . $sourceFilename . ' to ' . $targetFile, 1311895454);
+			throw new \Exception('Could not copy file ' . $sourceFilename . ' to ' . $targetFile, 1311895454);
 		}
 		return $newFilename;
 	}
@@ -227,17 +219,17 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	 * Deletes a file
 	 *
 	 * @param mixed $fileOrFileObjectStorage
-	 * @throws Exception
+	 * @throws \Exception
 	 * @return boolean
 	 * @api
 	 */
 	public function unlink($fileOrFileObjectStorage) {
-		if ($fileOrFileObjectStorage instanceof Tx_Tool_Resource_FileResourceObjectStorage) {
+		if ($fileOrFileObjectStorage instanceof \Greenfieldr\Tool\Resource\FileResourceObjectStorage) {
 			foreach ($fileOrFileObjectStorage as $filename) {
 				$this->unlink($filename->getAbsolutePath());
 			}
 			return TRUE;
-		} elseif ($fileOrFileObjectStorage instanceof Tx_Tool_Resource_FileResource) {
+		} elseif ($fileOrFileObjectStorage instanceof \Greenfieldr\Tool\Resource\FileResource) {
 			$this->unlink($fileOrFileObjectStorage->getAbsolutePath());
 		} elseif (is_file($fileOrFileObjectStorage) === FALSE) {
 			$fileOrFileObjectStorage = PATH_site . $fileOrFileObjectStorage;
@@ -245,7 +237,7 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 		} else {
 			$unlinked = unlink($fileOrFileObjectStorage);
 			if ($unlinked === FALSE) {
-				throw new Exception('Could not delete file ' . $fileOrFileObjectStorage, 1311895247);
+				throw new \Exception('Could not delete file ' . $fileOrFileObjectStorage, 1311895247);
 			}
 			return $unlinked;
 		}
@@ -257,16 +249,16 @@ class Tx_Tool_Service_FileService implements t3lib_Singleton {
 	 * @param string $targetDir
 	 * @param string $filename The target filename to be written
 	 * @param integer $chunk If doing chunked read/write uses append mode if $chunk > 0
-	 * @throws Exception
+	 * @throws \Exception
 	 * @return array
 	 */
 	public function getFileCopyPointers($sourceFileName, $targetDir, $filename, $chunk = 0) {
 		$in = fopen($sourceFileName, 'rb');
 		$out = fopen($targetDir . '/' . $filename, $chunk == 0 ? 'wb' : 'ab');
 		if ($out === FALSE) {
-			throw new Exception('Failed to open output stream', 102);
+			throw new \Exception('Failed to open output stream', 102);
 		} elseif ($in === FALSE) {
-			throw new Exception('Failed to open input stream', 101);
+			throw new \Exception('Failed to open input stream', 101);
 		}
 		return array($in, $out);
 	}

@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Service;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *   All rights reserved
  *
@@ -31,7 +34,7 @@
  * @package Tool
  * @subpackage Service
  */
-class Tx_Tool_Service_JsonService implements t3lib_Singleton {
+class JsonService implements \TYPO3\CMS\Core\SingletonInterface  {
 
 	/**
 	 * Detect the PHP version being used
@@ -109,11 +112,11 @@ class Tx_Tool_Service_JsonService implements t3lib_Singleton {
 	}
 
 	/**
-	 * @param Exception $e
+	 * @param \Exception $e
 	 * @return string
 	 * @api
 	 */
-	public function getRpcError(Exception $e) {
+	public function getRpcError(\Exception $e) {
 		$data = array(
 			'jsonrpc' => '2.0',
 			'error' => array(

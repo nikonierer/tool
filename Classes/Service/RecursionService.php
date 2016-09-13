@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Service;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -30,11 +33,10 @@
  * otherwise capable of ending in an infinite loop. Using this service you can
  * gently break execution and report a user-friendly error message.
  *
- * @author Claus Due
  * @package Tool
  * @subpackage Service
  */
-class Tx_Tool_Service_RecursionService implements t3lib_Singleton {
+class RecursionService implements \TYPO3\CMS\Core\SingletonInterface  {
 
 	/**
 	 * @var string
@@ -177,7 +179,7 @@ class Tx_Tool_Service_RecursionService implements t3lib_Singleton {
 	 * Check the current recursion level and encounter status. Call in each iteration of your function
 	 * @param string $exitMsg
 	 * @return boolean
-	 * @throws Exception
+	 * @throws \Exception
 	 * @api
 	 */
 	public function check($exitMsg='<no message>') {
@@ -186,7 +188,7 @@ class Tx_Tool_Service_RecursionService implements t3lib_Singleton {
 		$message = $this->getExceptionMessage();
 		if ($this->failsOnLevel()) {
 			$msg = $message . ' at level '. $level . ' with message: ' . $exitMsg;
-			throw new Exception($msg);
+			throw new \Exception($msg);
 		}
 		if ($this->failsOnMaxEncounters()) {
 			$msg = $message . ' at encounter ' . $maxEnc . ' of ' . $maxEnc . ' allowed with message: ' . $exitMsg;
@@ -207,13 +209,13 @@ class Tx_Tool_Service_RecursionService implements t3lib_Singleton {
 	/**
 	 * Throw an Exception - wrapper; check for auto-reset and reset if needed
 	 * @param string $message
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	private function throwException($message) {
 		if ($this->_autoReset === TRUE) {
 			$this->reset();
 		}
-		throw new Exception($message);
+		throw new \Exception($message);
 	}
 
 	/**

@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Resource;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -25,14 +28,13 @@
 
 /**
  * Resource: File - abstraction over a File in order to get sizes, paths, extension
- * etc from a file. Used by Tx_Tool_Resource_FileResourceObjectStorage to allow OO for'
+ * etc from a file. Used by \Greenfieldr\Tool\Resource\FileResourceObjectStorage to allow OO for'
  * files 100% compatible with the way TYPO3 treats files, upload folders and all.
  *
- * @author Claus Due
  * @package Tool
  * @subpackage Resource
  */
-class Tx_Tool_Resource_FileResource {
+class FileResource {
 
 	/**
 	 * @var string
@@ -65,12 +67,12 @@ class Tx_Tool_Resource_FileResource {
 	protected $size;
 
 	/**
-	 * @var DateTime
+	 * @var \DateTime
 	 */
 	protected $modified;
 
 	/**
-	 * @var DateTime
+	 * @var \DateTime
 	 */
 	protected $created;
 
@@ -182,30 +184,30 @@ class Tx_Tool_Resource_FileResource {
 	}
 
 	/**
-	 * @return DateTime
+	 * @return \DateTime
 	 */
 	public function getModified() {
 		return $this->modified;
 	}
 
 	/**
-	 * @param DateTime $modified
+	 * @param \DateTime $modified
 	 */
-	public function setModified(DateTime $modified) {
+	public function setModified(\DateTime $modified) {
 		$this->modified = $modified;
 	}
 
 	/**
-	 * @return DateTime
+	 * @return \DateTime
 	 */
 	public function getCreated() {
 		return $this->created;
 	}
 
 	/**
-	 * @param DateTime $created
+	 * @param \DateTime $created
 	 */
-	public function setCreated(DateTime $created) {
+	public function setCreated(\DateTime $created) {
 		$this->created = $created;
 	}
 
@@ -220,8 +222,8 @@ class Tx_Tool_Resource_FileResource {
 	 * @param string $absolutePath
 	 */
 	public function setAbsolutePath($absolutePath) {
-		$this->created = new DateTime();
-		$this->modified = new DateTime();
+		$this->created = new \DateTime();
+		$this->modified = new \DateTime();
 		if (file_exists($absolutePath)) {
 			$pathinfo = pathinfo($absolutePath);
 			$this->extension = $pathinfo['extension'];

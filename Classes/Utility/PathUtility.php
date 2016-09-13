@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Utility;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -26,12 +29,12 @@
 /**
  * Path Utility
  *
- * Converts paths using t3lib_div::getFileAbsFilename, arrays supported
+ * Converts paths using \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFilename, arrays supported
  *
  * @package Tool
  * @subpackage Utility
  */
-class Tx_Tool_Utility_PathUtility {
+class PathUtility {
 
 	/**
 	 * Translates an array of paths or single path into absolute paths/path
@@ -41,7 +44,7 @@ class Tx_Tool_Utility_PathUtility {
 	 */
 	public function translatePath($path) {
 		if (is_array($path) == FALSE) {
-			return t3lib_div::getFileAbsFileName($path);
+			return \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($path);
 		} else {
 			foreach ($path as $key=>$subPath) {
 				$path[$key] = self::translatePath($subPath);

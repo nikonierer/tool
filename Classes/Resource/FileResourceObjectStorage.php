@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Resource;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -29,21 +32,25 @@
  * Tx_Tool_Resource_FileResource and others. Supports "serialization" to a TYPO3-compatible
  * CSV format based on $basePath for true BE support.
  *
- * @author Claus Due
  * @package Tool
  * @subpackage Resource
  */
-class Tx_Tool_Resource_FileResourceObjectStorage extends SplObjectStorage {
+class FileResourceObjectStorage extends \SplObjectStorage {
 
 	/**
-	 * @var Tx_Tool_Service_DomainService
+	 * @var \Greenfieldr\Tool\Service\DomainService
 	 */
 	protected $domainService;
 
 	/**
-	 * @var Tx_Extbase_Object_ObjectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
 	 */
 	protected $objectManager;
+
+    /**
+     * @var \Greenfieldr\Tool\Service\FileService
+     */
+    protected $fileService;
 
 	/**
 	 * SITE-RELATIVE base path to prefix to all files' filenames in this collection
@@ -52,11 +59,11 @@ class Tx_Tool_Resource_FileResourceObjectStorage extends SplObjectStorage {
 	protected $basePath;
 
 	/**
-	 * Type of the object contained - such as Tx_Tool_Resource_FileResource et al.
+	 * Type of the object contained - such as \Greenfieldr\Tool\Resource\FileResourceObjectStorage et al.
 	 * Has a default value of the most basic File object type as fallback.
 	 * @var string
 	 */
-	protected $objectType = 'Tx_Tool_Resource_FileResource';
+	protected $objectType = '\Greenfieldr\Tool\Resource\FileResourceObjectStorage';
 
 	/**
 	 * The name of the property on a DomainObject to which this instance belongs.
@@ -67,7 +74,7 @@ class Tx_Tool_Resource_FileResourceObjectStorage extends SplObjectStorage {
 
 	/**
 	 * The associated DomainObject which has the property containing this object instance
-	 * @var Tx_Extbase_DomainObject_AbstractDomainObject
+	 * @var \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject
 	 */
 	protected $associatedDomainObject;
 
@@ -82,12 +89,13 @@ class Tx_Tool_Resource_FileResourceObjectStorage extends SplObjectStorage {
 		}
 	}
 
-	/**
-	 * @param string $basePath
-	 */
+    /**
+     * @param string $basePath
+     * @throws \Exception
+     */
 	public function setBasePath($basePath) {
 		if (substr($basePath, 0, 1) === '/') {
-			throw new Exception('FileResourceObjectStorage does not support absolute paths!', 1311692821);
+			throw new \Exception('FileResourceObjectStorage does not support absolute paths!', 1311692821);
 		}
 		if (substr($basePath, -1) !== '/') {
 			$basePath .= '/';
@@ -124,10 +132,10 @@ class Tx_Tool_Resource_FileResourceObjectStorage extends SplObjectStorage {
 	 * Define the source parent of this FileResourceObjectStorage - enables automatic
 	 * detection of $objectType and $basePath based on $propertyName and TCA.
 	 *
-	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $associatedDomainObject
+	 * @param \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $associatedDomainObject
 	 * @param string $propertyName Name of the property in which this object is contained
 	 */
-	public function setAssociatedDomainObject(Tx_Extbase_DomainObject_AbstractDomainObject $associatedDomainObject, $propertyName) {
+	public function setAssociatedDomainObject(\TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $associatedDomainObject, $propertyName) {
 		$annotationValues = $this->domainService->getAnnotationValuesByProperty($associatedDomainObject, $propertyName, 'file');
 		// use collected data to set necessary precursor variables
 		$this->objectType = array_pop($annotationValues);
@@ -137,7 +145,7 @@ class Tx_Tool_Resource_FileResourceObjectStorage extends SplObjectStorage {
 	}
 
 	/**
-	 * @return Tx_Extbase_DomainObject_AbstractDomainObject
+	 * @return \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject
 	 */
 	public function getAssociatedDomainObject() {
 		return $this->associatedDomainObject;
@@ -169,9 +177,9 @@ class Tx_Tool_Resource_FileResourceObjectStorage extends SplObjectStorage {
 	 * @param string $possibleAssociatedPropertyName
 	 */
 	public function __construct($possibleCsv = NULL, $possibleAssociatedPropertyName = NULL) {
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->domainService = $this->objectManager->get('Tx_Tool_Service_DomainService');
-		$this->fileService = $this->objectManager->get('Tx_Tool_Service_FileService');
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class);
+		$this->domainService = $this->objectManager->get(\Greenfieldr\Tool\Service\DomainService::class);
+		$this->fileService = $this->objectManager->get(\Greenfieldr\Tool\Service\FileService::class);
 		if (is_string($possibleCsv)) {
 			$this->attachFromCsv($possibleCsv);
 		}

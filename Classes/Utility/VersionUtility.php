@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Utility;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -29,11 +32,10 @@
  * Contains methods to check various aspects about the
  * current TYPO3 version.
  *
- * @author Claus Due
  * @package Tool
  * @subpackage Utility
  */
-class Tx_Tool_Utility_VersionUtility {
+class VersionUtility {
 
 	/**
 	 * @var array

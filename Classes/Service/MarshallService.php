@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Service;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -76,19 +79,18 @@
  * based manual inflation due to the use of meta-nesting of objects)
  * etc. and can be compressed using any compression routine.
  *
- * @author Claus Due
  * @package Tool
  * @subpackage Service
  */
-class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
+class MarshallService implements \TYPO3\CMS\Core\SingletonInterface  {
 
-	const TYPE_CLOSURE = 'Closure';
-	const TYPE_DATETIME = 'DateTime';
-	const TYPE_DOMAINOBJECT = 'DomainObject';
-	const TYPE_ARRAY = 'Array';
-	const TYPE_ARRAYOBJECT = 'ArrayObject';
-	const TYPE_OBJECT = 'Object';
-	const TYPE_OBJECTSTORAGE = 'ObjectStorage';
+	const TYPE_CLOSURE = '\Closure';
+	const TYPE_DATETIME = '\DateTime';
+	const TYPE_DOMAINOBJECT = '\DomainObject';
+	const TYPE_ARRAY = '\Array';
+	const TYPE_ARRAYOBJECT = '\ArrayObject';
+	const TYPE_OBJECT = '\Object';
+	const TYPE_OBJECTSTORAGE = '\ObjectStorage';
 
 	/**
 	 * @var array
@@ -101,48 +103,27 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @var array
 	 */
 	protected $rewrites = array(
-		'Tx_Extbase_Persistence_LazyObjectStorage' => 'Tx_Extbase_Persistence_ObjectStorage',
 		'TYPO3\\CMS\\Extbase\\Persistence\\LazyObjectStorage' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage',
 		'TYPO3\\CMS\\Extbase\\Persistence\\Generic\\LazyObjectStorage' => 'TYPO3\\CMS\\Extbase\\Persistence\\ObjectStorage',
 	);
 
 	/**
-	 * @var Tx_Extbase_Object_ObjectManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
+     * @inject
 	 */
 	protected $objectManager;
 
 	/**
-	 * @var Tx_Tool_Service_JsonService
+	 * @var \Greenfieldr\Tool\Service\JsonService
+     * @inject
 	 */
 	protected $jsonService;
 
 	/**
-	 * @var Tx_Extbase_Reflection_Service
+	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
+     * @inject
 	 */
 	protected $reflectionService;
-
-	/**
-	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
-	 */
-	public function injectObjectManager(Tx_Extbase_Object_ObjectManagerInterface $objectManager) {
-		$this->objectManager = $objectManager;
-	}
-
-	/**
-	 * @param Tx_Tool_Service_JsonService $jsonService
-	 * @return void
-	 */
-	public function injectJsonService(Tx_Tool_Service_JsonService $jsonService) {
-		$this->jsonService = $jsonService;
-	}
-
-	/**
-	 * @param Tx_Extbase_Reflection_Service $reflectionService
-	 * @return void
-	 */
-	public function injectReflectionService(Tx_Extbase_Reflection_Service $reflectionService) {
-		$this->reflectionService = $reflectionService;
-	}
 
 	/**
 	 * Marshall (deflate, encode) an object instance down to a JSON-based structure.
@@ -151,7 +132,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 *
 	 * @param object $object
 	 * @return string
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
 	 */
 	public function marshall($object) {
 		ini_set('memory_limit', '2048M');
@@ -167,13 +148,14 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @param string $string
 	 * @param mixed $allowedRootClassOrClasses A string class name or an array of ROOT OBJECT class names which are permitted
 	 * @return object|NULL
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
+     * @throws \Exception
 	 */
 	public function unmarshall($string, $allowedRootClassOrClasses = NULL) {
 		$string = trim($string);
 		$decoded = $this->jsonService->decode($string);
 		if (NULL === $decoded) {
-			throw new Exception('Unable to unmarshall a marshaled object; the decoded result was NULL. ' .
+			throw new \Exception('Unable to unmarshall a marshaled object; the decoded result was NULL. ' .
 				'Marshaled object data: ' . var_export($string, TRUE), 1361052486);
 		}
 		if (TRUE === isset($decoded['class'])) {
@@ -184,10 +166,10 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 				$rootClassIsPermitted = ($rootClassName === $allowedRootClassOrClasses || $allowedRootClassOrClasses === NULL);
 			}
 			if ($rootClassIsPermitted === FALSE) {
-				throw new RuntimeException('Attempt to unmarshall a disallowed root object class: "' . $rootClassName . '".', 1358284604);
+				throw new \RuntimeException('Attempt to unmarshall a disallowed root object class: "' . $rootClassName . '".', 1358284604);
 			}
 		} elseif (TRUE === is_null($decoded)) {
-			throw new RuntimeException('Unable to unmarshall input, return value was NULL. Input was: ' . $string, 1360854250);
+			throw new \RuntimeException('Unable to unmarshall input, return value was NULL. Input was: ' . $string, 1360854250);
 		}
 		$encounteredObjectInstancesForReuse = array();
 		$unmarshaled = $this->inflatePropertyValue($decoded, $encounteredObjectInstancesForReuse);
@@ -200,7 +182,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @param object $instance Instance of an object, DomainObject included
 	 * @param string $propertyName String name of property on DomainObject instance which is up for assertion
 	 * @return boolean
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
 	 */
 	protected function assertSupportsDeflation($instance, $propertyName) {
 		$className = get_class($instance);
@@ -209,17 +191,17 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 			return FALSE;
 		}
 		try {
-			$value = Tx_Extbase_Reflection_ObjectAccess::getProperty($instance, $propertyName, TRUE);
-		} catch (RuneimeException $error) {
+			$value = \TYPO3\CMS\Extbase\Reflection\ObjectAccess::getProperty($instance, $propertyName, TRUE);
+		} catch (\RuntimeException $error) {
 			$getter = 'get' . ucfirst($propertyName);
 			if (FALSE === method_exists($instance, $getter)) {
 				return FALSE;
 			}
-			t3lib_div::sysLog('MarshallService encountered an error while attempting to retrieve the value of ' .
-				$className . '::$' . $propertyName . ' - assuming safe deflation is possible', 'site', t3lib_div::SYSLOG_SEVERITY_NOTICE);
+			\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog('MarshallService encountered an error while attempting to retrieve the value of ' .
+				$className . '::$' . $propertyName . ' - assuming safe deflation is possible', 'site', \TYPO3\CMS\Core\Utility\GeneralUtility::SYSLOG_SEVERITY_NOTICE);
 			return TRUE;
 		}
-		return (FALSE === $value instanceof Closure);
+		return (FALSE === $value instanceof \Closure);
 	}
 
 	/**
@@ -228,7 +210,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @param object $instance Instance of an object, DomainObject included
 	 * @param string $propertyName String name of property on DomainObject instance which is up for assertion
 	 * @return boolean
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
 	 */
 	protected function assertAllowsDeflation($instance, $propertyName) {
 		if (self::TYPE_CLOSURE === gettype($instance)) {
@@ -322,19 +304,19 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 */
 	protected function deflatePropertyValue($propertyValue, array &$encounteredClassesIndexedBySplHash) {
 		$metaInformationAndDeflatedValue = array();
-		if ($propertyValue instanceof Tx_Extbase_DomainObject_DomainObjectInterface) {
+		if ($propertyValue instanceof \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface) {
 			$metaInformationAndDeflatedValue['type'] = self::TYPE_DOMAINOBJECT;
 			$metaInformationAndDeflatedValue['hash'] = spl_object_hash($propertyValue);
 			$metaInformationAndDeflatedValue['class'] = get_class($propertyValue);
 			$metaInformationAndDeflatedValue['value'] = $this->deflateObject($propertyValue, $encounteredClassesIndexedBySplHash);
-		} elseif ($propertyValue instanceof DateTime) {
+		} elseif ($propertyValue instanceof \DateTime) {
 			$metaInformationAndDeflatedValue['type'] = self::TYPE_DATETIME;
 			$metaInformationAndDeflatedValue['value'] = $this->deflateDateTime($propertyValue);
-		} elseif ($propertyValue instanceof Tx_Extbase_Persistence_ObjectStorage) {
+		} elseif ($propertyValue instanceof \TYPO3\CMS\Extbase\Persistence\ObjectStorage) {
 			$metaInformationAndDeflatedValue['type'] = self::TYPE_OBJECTSTORAGE;
 			$metaInformationAndDeflatedValue['class'] = get_class($propertyValue);
 			$metaInformationAndDeflatedValue['value'] = $this->deflateArray(iterator_to_array($propertyValue), $encounteredClassesIndexedBySplHash);
-		} elseif ($propertyValue instanceof ArrayObject) {
+		} elseif ($propertyValue instanceof \ArrayObject) {
 			$metaInformationAndDeflatedValue['type'] = self::TYPE_ARRAYOBJECT;
 			$metaInformationAndDeflatedValue['hash'] = spl_object_hash($propertyValue);
 			$metaInformationAndDeflatedValue['class'] = get_class($propertyValue);
@@ -356,10 +338,10 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	/**
 	 * Deflates a DateTime value down to a UNIX timestamp (negative supported, 64-bit safe) integer.
 	 *
-	 * @param DateTime $dateTime
+	 * @param \DateTime $dateTime
 	 * @return integer
 	 */
-	protected function deflateDateTime(DateTime $dateTime) {
+	protected function deflateDateTime(\DateTime $dateTime) {
 		$timestamp = $dateTime->format('U');
 		return $timestamp;
 	}
@@ -368,7 +350,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * Inflates a deflated "meta-information-plus-deflated-value" array up to a DateTime instance.
 	 *
 	 * @param mixed $metaConfigurationAndDeflatedValueOrTimestamp The deflated configuration and value or a plain UNIX timestamp
-	 * @return DateTime
+	 * @return \DateTime
 	 */
 	protected function inflateDateTime($metaConfigurationAndDeflatedValueOrTimestamp) {
 		if (FALSE === is_array($metaConfigurationAndDeflatedValueOrTimestamp)) {
@@ -376,7 +358,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 		} else {
 			$timestamp = $metaConfigurationAndDeflatedValueOrTimestamp['value'];
 		}
-		$dateTime = DateTime::createFromFormat('U', $timestamp);
+		$dateTime = \DateTime::createFromFormat('U', $timestamp);
 		return $dateTime;
 	}
 
@@ -386,11 +368,11 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * @param object $object
 	 * @param array $encounteredClassesIndexedBySplHash A cumulative array of encountered objects indexed by SPL hash
 	 * @return array
-	 * @throws RuntimeException
+	 * @throws \RuntimeException
 	 */
 	protected function deflateObject($object, array &$encounteredClassesIndexedBySplHash) {
 		$className = get_class($object);
-		$objectReflection = new ReflectionObject($object);
+		$objectReflection = new \ReflectionObject($object);
 		$marshaled = array();
 		$hash = spl_object_hash($object);
 		if (TRUE === isset($encounteredClassesIndexedBySplHash[$hash])) {
@@ -406,7 +388,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 			}
 			$allowsDeflation = $this->assertAllowsDeflation($object, $propertyName);
 			if (FALSE === $allowsDeflation) {
-				throw new RuntimeException('Attempt to marshal a prohibited type (property "' .
+				throw new \RuntimeException('Attempt to marshal a prohibited type (property "' .
 					$propertyName . '" on class "' . $className . '")', 1358282768);
 			}
 			if (method_exists($propertyReflection, 'setAccessible') === TRUE) {
@@ -432,7 +414,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 *
 	 * @param array $metaConfigurationAndDeflatedValue The deflated configuration and value
 	 * @param array $encounteredClassesIndexedBySplHash A cumulative array of encountered objects indexed by SPL hash
-	 * @return Tx_Extbase_DomainObject_DomainObjectInterface
+	 * @return \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface
 	 */
 	protected function inflateObject(array $metaConfigurationAndDeflatedValue, array &$encounteredClassesIndexedBySplHash) {
 		if (is_string($metaConfigurationAndDeflatedValue['value'])) {
@@ -447,8 +429,9 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 			$className = $this->rewrites[$className];
 		}
 		$hash = $metaConfigurationAndDeflatedValue['hash'];
-		$instance = $this->objectManager->create($className);
-		$objectReflection = new ReflectionObject($instance);
+        /** @var \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $instance */
+		$instance = $this->objectManager->get($className);
+		$objectReflection = new \ReflectionObject($instance);
 		$encounteredClassesIndexedBySplHash[$hash] = $instance;
 		foreach ($metaConfigurationAndDeflatedValue['value'] as $propertyName => $propertyMetaConfigurationAndDeflatedValue) {
 			$propertyMetaConfigurationAndDeflatedValue = $metaConfigurationAndDeflatedValue['value'][$propertyName];
@@ -474,11 +457,11 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 * Deflates an ArrayObject into a "meta-information-plus-simple-array" array. Also deflates all members of the ArrayAccess
 	 * instance into the appropriate types while also respecting doc comment annotations.
 	 *
-	 * @param ArrayObject $arrayObject An instance of a ArrayObject source
+	 * @param \ArrayObject $arrayObject An instance of a ArrayObject source
 	 * @param array $encounteredClassesIndexedBySplHash A cumulative array of encountered objects indexed by SPL hash
 	 * @return array
 	 */
-	protected function deflateArrayObject(ArrayObject $arrayObject, array &$encounteredClassesIndexedBySplHash) {
+	protected function deflateArrayObject(\ArrayObject $arrayObject, array &$encounteredClassesIndexedBySplHash) {
 		return $this->deflateArray(iterator_to_array($arrayObject, TRUE), $encounteredClassesIndexedBySplHash);
 	}
 
@@ -488,7 +471,7 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 	 *
 	 * @param array $metaConfigurationAndDeflatedValue
 	 * @param array $encounteredClassesIndexedBySplHash A cumulative array of encountered objects indexed by SPL hash
-	 * @return ArrayObject
+	 * @return \ArrayObject
 	 */
 	protected function inflateArrayObject(array $metaConfigurationAndDeflatedValue, array &$encounteredClassesIndexedBySplHash) {
 		$className = $metaConfigurationAndDeflatedValue['class'];
@@ -502,12 +485,13 @@ class Tx_Tool_Service_MarshallService implements t3lib_Singleton {
 			}
 			return NULL;
 		}
-		$instance = $this->objectManager->create($className);
+		/** @var \ArrayObject $instance */
+		$instance = $this->objectManager->get($className);
 		foreach ($metaConfigurationAndDeflatedValue['value'] as $index => $memberMetaConfigurationAndDeflatedValue) {
 			$inflatedMember = $this->inflatePropertyValue($memberMetaConfigurationAndDeflatedValue, $encounteredClassesIndexedBySplHash);
-			if ($instance instanceof Tx_Extbase_Persistence_ObjectStorage) {
+			if ($instance instanceof \TYPO3\CMS\Extbase\Persistence\ObjectStorage) {
 				$instance->attach($inflatedMember);
-			} elseif ($instance instanceof ArrayAccess || is_array($instance) === TRUE) {
+			} elseif ($instance instanceof \ArrayAccess || is_array($instance) === TRUE) {
 				$instance[$index] = $inflatedMember;
 			}
 		}

@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Service;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Claus Due <claus@namelesscoder.net>
+ *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -29,33 +32,26 @@
  * Responds with either TRUE or FALSE depending on various authentication checks
  * such as group membership, logged in BE/FE user etc.
  *
- * @author Claus Due
  * @package Tool
  * @subpackage Service
  */
-class Tx_Tool_Service_AuthService implements t3lib_Singleton {
+class AuthService implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
-	 * @var Tx_Tool_Service_UserService
+	 * @var \Greenfieldr\Tool\Service\UserService
+     * @inject
 	 */
 	protected $userService;
-
-	/**
-	 * @param Tx_Tool_Service_UserService $userService
-	 */
-	public function injectUserService(Tx_Tool_Service_UserService $userService) {
-		$this->userService = $userService;
-	}
 
 	/**
 	 * Returns TRUE only if a FrontendUser is currently logged in. Use argument
 	 * to return TRUE only if the FrontendUser logged in must be that specific user.
 	 *
-	 * @param Tx_Extbase_Domain_Model_FrontendUser $frontendUser
+	 * @param \TYPO3\CMS\Extbase\Domain\Model\FrontendUser $frontendUser
 	 * @return boolean
 	 * @api
 	 */
-	public function assertFrontendUserLoggedIn(Tx_Extbase_Domain_Model_FrontendUser $frontendUser = NULL) {
+	public function assertFrontendUserLoggedIn(\TYPO3\CMS\Extbase\Domain\Model\FrontendUser $frontendUser = NULL) {
 		$currentFrontendUser = $this->userService->getCurrentFrontendUser();
 		if (!$currentFrontendUser) {
 			return FALSE;
@@ -83,9 +79,9 @@ class Tx_Tool_Service_AuthService implements t3lib_Singleton {
 		}
 		$currentFrontendUserGroups = $currentFrontendUser->getUsergroup();
 		if ($groups) {
-			if ($groups instanceof Tx_Extbase_Domain_Model_FrontendUserGroup) {
+			if ($groups instanceof \TYPO3\CMS\Extbase\Domain\Model\FrontendUserGroup) {
 				return $currentFrontendUserGroups->contains($groups);
-			} elseif ($groups instanceof Tx_Extbase_Persistence_ObjectStorage) {
+			} elseif ($groups instanceof \TYPO3\CMS\Extbase\Persistence\ObjectStorage) {
 				$currentFrontendUserGroupsClone = clone $currentFrontendUserGroups;
 				$currentFrontendUserGroupsClone->removeAll($groups);
 				return ($currentFrontendUserGroups->count() !== $currentFrontendUserGroupsClone->count());

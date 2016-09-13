@@ -1,8 +1,11 @@
 <?php
+namespace Greenfieldr\Tool\Service;
+
 /***************************************************************
  *  Copyright notice
  *
  *  (c) 2014 Claus Due <claus@namelesscoder.net>
+ *  (c) 2016 Marcel Wieser <typo3dev@marcel-wieser.de>
  *
  *  All rights reserved
  *
@@ -29,78 +32,49 @@
  * annotations, datatypes of properties (without reading data from an instance),
  * getting repository instances, determining plugin names and more.
  *
- *
- * @author Claus Due
  * @package Tool
  * @subpackage Service
  */
-class Tx_Tool_Service_DomainService implements t3lib_Singleton {
+class DomainService implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * RecursionHandler instance
-	 * @var Tx_Tool_Service_RecursionService
+	 * @var \Greenfieldr\Tool\Service\RecursionService
+     * @inject
 	 */
 	public $recursionService;
 
 	/**
 	 * ReflectionService instance
-	 * @var Tx_Extbase_Reflection_Service $service
+	 * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService $service
+     * @inject
 	 */
 	protected $reflectionService;
 
 	/**
 	 * ObjectManager instance
-	 * @var Tx_Extbase_Object_ObjectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
+     * @inject
 	 */
 	protected $objectManager;
 
 	/**
-	 * @var Tx_Extbase_Persistence_Mapper_DataMapFactory
+	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapFactory
+     * @inject
 	 */
 	protected $dataMapFactory;
 
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManager
+     * @inject
 	 */
 	protected $configurationManager;
 
-	/**
-	 * Inject a RecursionService instance
-	 * @param Tx_Tool_Service_RecursionService $recursionService
-	 */
-	public function injectRecursionService(Tx_Tool_Service_RecursionService $recursionService) {
-		$this->recursionService = $recursionService;
-	}
-
-	/**
-	 * Inject a Reflection Service instance
-	 * @param Tx_Extbase_Reflection_Service $service
-	 */
-	public function injectReflectionService(Tx_Extbase_Reflection_Service $service) {
-		$this->reflectionService = $service;
-	}
-
-	/**
-	 * Inject a Reflection Service instance
-	 * @param Tx_Extbase_Object_ObjectManager $manager
-	 */
-	public function injectObjectManager(Tx_Extbase_Object_ObjectManager $manager) {
-		$this->objectManager = $manager;
-	}
-
-	/**
-	 * @param Tx_Extbase_Persistence_Mapper_DataMapFactory $dataMapFactory
-	 */
-	public function injectDataMapFactory(Tx_Extbase_Persistence_Mapper_DataMapFactory $dataMapFactory) {
-		$this->dataMapFactory = $dataMapFactory;
-	}
-
-	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
-	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
-		$this->configurationManager = $configurationManager;
-	}
+    /**
+     * @var \TYPO3\CMS\Extbase\Service\ExtensionService
+     * @inject
+     */
+    protected $extensionService;
 
 	/**
 	 * Get an array of properties of $object which have been annotated with $annotation
@@ -183,11 +157,8 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 	public function getPluginName($object) {
 		$extensionName = $this->getExtensionName($object);
 		$controllerName = $this->getControllerName($object);
-		if (class_exists('Tx_Extbase_Service_Extension') === TRUE) {
-			$pluginName = $this->objectManager->get('Tx_Extbase_Service_Extension')->getPluginNameByAction($extensionName, $controllerName, 'list');
-		} else {
-			$pluginName = Tx_Extbase_Utility_Extension::getPluginNameByAction($extensionName, $controllerName, 'list');
-		}
+        $pluginName = $this->extensionService->getPluginNameByAction($extensionName, $controllerName, 'list');
+
 		return $pluginName;
 	}
 
@@ -204,7 +175,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 		if (class_exists('Tx_Extbase_Service_Extension') === TRUE) {
 			return $this->objectManager->get('Tx_Extbase_Service_Extension')->getPluginNamespace($extensionName, $pluginName);
 		} else {
-			return Tx_Extbase_Utility_Extension::getPluginNamespace($extensionName, $pluginName);
+			return $this->extensionService->getPluginNamespace($extensionName, $pluginName);
 		}
 	}
 
@@ -222,17 +193,22 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 	 * Get an instance of a proper Repository for $object (instance or classname)
 	 *
 	 * @param mixed $object
-	 * @return Tx_Extbase_Persistence_Repository
+	 * @return \TYPO3\CMS\Extbase\Persistence\Repository
 	 * @api
 	 */
 	public function getRepositoryInstance($object) {
 		$class = $this->getRepositoryClassname($object);
-		return $this->objectManager->get($class);
+
+        /** @var \TYPO3\CMS\Extbase\Persistence\Repository $repository */
+		$repository = $this->objectManager->get($class);
+
+        return $repository;
 	}
 
 	/**
 	 * Gets the absolute path to partial templates for $object
 	 *
+     * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object
 	 * @return string
 	 * @api
 	 */
@@ -249,7 +225,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 
 	/**
 	 * Returns the View configuration for $object as defined in Typoscript
-	 * @param Tx_Extbase_DomainObject_DomainObjectInterface $object
+	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object
 	 * @return array
 	 * @api
 	 */
@@ -261,27 +237,27 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 	/**
 	 * Returns the absolute path to the Resources folder for $object
 	 *
-	 * @param Tx_Extbase_DomainObject_DomainObjectInterface $object
+	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object
 	 * @return string
 	 * @api
 	 */
 	public function getResourcePath($object) {
 		$extensionName = $this->getExtensionName($object);
 		$extensionName = $this->convertCamelCaseToLowerCaseUnderscored($extensionName);
-		return t3lib_extMgm::extPath($extensionName, 'Resources/');
+		return \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath($extensionName, 'Resources/');
 	}
 
 	/**
 	 * Returns the site-relative path to the Resources folder for $object
 	 *
-	 * @param Tx_Extbase_DomainObject_DomainObjectInterface $object
+	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object
 	 * @return string
 	 * @api
 	 */
 	public function getResourcePathRel($object) {
 		$extensionName = $this->getExtensionName($object);
 		$extensionName = $this->convertCamelCaseToLowerCaseUnderscored($extensionName);
-		return t3lib_extMgm::siteRelPath($extensionName) . 'Resources/';
+		return \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($extensionName) . 'Resources/';
 	}
 
 	/**
@@ -377,11 +353,11 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 	 * @api
 	 */
 	public function getExtensionTyposcriptConfiguration($object) {
-		$setup = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
+		$setup = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
 		$extensionName = $this->getExtensionName($object);
 		$extensionName = strtolower($extensionName);
 		if (is_array($setup['plugin.']['tx_' . $extensionName . '.'])) {
-			$extensionConfiguration = Tx_Tool_Utility_ArrayUtility::convertTypoScriptArrayToPlainArray($setup['plugin.']['tx_' . $extensionName . '.']);
+			$extensionConfiguration = \Greenfieldr\Tool\Utility\ArrayUtility::convertTypoScriptArrayToPlainArray($setup['plugin.']['tx_' . $extensionName . '.']);
 		} else {
 			$extensionConfiguration = NULL;
 		}
@@ -431,15 +407,15 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 			}
 			if ($this->hasAnnotation($className, $propertyName, $annotation, $value)) {
 				$returnValue = $object->$getter();
-				if ($returnValue instanceof Tx_Extbase_Persistence_ObjectStorage) {
+				if ($returnValue instanceof \TYPO3\CMS\Extbase\Persistence\ObjectStorage) {
 					$array = $returnValue->toArray();
 					foreach ($array as $k=>$v) {
 						$array[$k] = $this->getValuesByAnnotation($v, $annotation, $value, $addUid);
 					}
 					$returnValue = $array;
-				} elseif ($returnValue instanceof Tx_Extbase_DomainObject_DomainObjectInterface) {
+				} elseif ($returnValue instanceof \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface) {
 					$returnValue = $this->getValuesByAnnotation($returnValue, $annotation, $value, $addUid);
-				} elseif ($returnValue instanceof DateTime) {
+				} elseif ($returnValue instanceof \DateTime) {
 					$returnValue = $returnValue->format('r');
 				}
 				$return[$propertyName] = $returnValue;
@@ -501,10 +477,10 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 	 * @api
 	 */
 	public function getObjectType($table) {
-		$typoscript = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
+		$typoscript = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
 		$configuration = $typoscript['config.']['tx_extbase.']['persistence.']['classes.'];
 		if (is_array($configuration)) {
-			$configuration = Tx_Tool_Utility_ArrayUtility::convertTypoScriptArrayToPlainArray($configuration);
+			$configuration = \Greenfieldr\Tool\Utility\ArrayUtility::convertTypoScriptArrayToPlainArray($configuration);
 			foreach ($configuration as $objectType=>$definition) {
 				if ($definition['tableName'] === $table) {
 					return $objectType;
@@ -525,7 +501,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 				$subject[$k] = $this->convertLowerCaseUnderscoredToLowerCamelCase($value);
 			}
 		} else {
-			$subject = t3lib_div::underscoredToLowerCamelCase($subject);
+			$subject = \TYPO3\CMS\Core\Utility\GeneralUtility::underscoredToLowerCamelCase($subject);
 			$subject{0} = strtolower($subject{0});
 		}
 		return $subject;
@@ -542,7 +518,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 				$subject[$k] = $this->convertCamelCaseToLowerCaseUnderscored($value);
 			}
 		} else {
-			$subject = t3lib_div::camelCaseToLowerCaseUnderscored($subject);
+			$subject = \TYPO3\CMS\Core\Utility\GeneralUtility::camelCaseToLowerCaseUnderscored($subject);
 		}
 		return $subject;
 	}
@@ -562,7 +538,7 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 			$object = $this->objectManager->get($className);
 		}
 		if ($propertyName === NULL) {
-			$properties = Tx_Extbase_Reflection_ObjectAccess::getGettablePropertyNames($object);
+			$properties = \TYPO3\CMS\Extbase\Reflection\ObjectAccess::getGettablePropertyNames($object);
 			$folders = array();
 			foreach ($properties as $propertyName) {
 				$uploadFolder = $this->getUploadFolder($object, $propertyName);
@@ -573,7 +549,6 @@ class Tx_Tool_Service_DomainService implements t3lib_Singleton {
 			return $folders;
 		}
 		$tableName = $this->getDatabaseTable($object);
-		t3lib_div::loadTCA($tableName);
 		$underscoredPropertyName = $this->convertCamelCaseToLowerCaseUnderscored($propertyName);
 		$uploadFolder = $GLOBALS['TCA'][$tableName]['columns'][$underscoredPropertyName]['config']['uploadfolder'];
 		return $uploadFolder;
